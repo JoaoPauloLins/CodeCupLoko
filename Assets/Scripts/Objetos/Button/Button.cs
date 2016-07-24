@@ -4,8 +4,8 @@ using System.Collections;
 public class Button : MonoBehaviour {
 
     public bool isPressed;
-    private bool isPressedByPlayer;
-    private bool isPressedByBox;
+    public bool isPressedByPlayer;
+    public bool isPressedByBox;
 
 	// Use this for initialization
 	void Start () {
@@ -50,5 +50,12 @@ public class Button : MonoBehaviour {
 
         if (col.gameObject.tag == "Caixa")
             isPressedByBox = false;
+    }
+
+    public void resetButton()
+    {
+        isPressedByBox = false;
+        isPressedByPlayer = false;
+        isPressed = false;
     }
 }

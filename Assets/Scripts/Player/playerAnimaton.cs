@@ -44,11 +44,14 @@ public class playerAnimaton : MonoBehaviour {
         velocidadeY = player.GetComponent<Rigidbody2D>().velocity.y;
 
         
+        if (!player.isDead())
+        {
 
-        anime.SetBool ("walk", walk);
-        anime.SetBool("correndo", run);
-        anime.SetBool("isJumping", isJumping);
-        anime.SetFloat("velocidadeY", velocidadeY);
+            anime.SetBool ("walk", walk);
+            anime.SetBool("correndo", run);
+            anime.SetBool("isJumping", isJumping);
+            anime.SetFloat("velocidadeY", velocidadeY);
+        }
 	
 	}
 }

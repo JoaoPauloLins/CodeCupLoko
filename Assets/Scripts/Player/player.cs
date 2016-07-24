@@ -1,31 +1,38 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.SceneManagement;
 
-public class player : MonoBehaviour {
+public class player : MonoBehaviour
+{
 
-	private	float 		speed;
-    private float       speedRunning;
-    private  float       movimentoX;
+    private float speed;
+    private float speedRunning;
+    private float movimentoX;
 
-    private  bool         correndo; //Alteracao de JP.
-    private  bool        jumping;
-    private  int         jumpForce;
-    private  bool        grounded;
-    private bool        collideWithWallOnRightSide;
+    private bool dead;
+    private float deathTime;
+    private bool correndo; //Alteracao de JP.
+    private bool jumping;
+    private int jumpForce;
+    private bool grounded;
+    private bool collideWithWallOnRightSide;
 
-    private bool         parede;
-	private	bool 		facingRight;
+    private bool parede;
+    private bool facingRight;
 
     private Vector3 lastCheckPoint;
     private int lastCheckPointIndex;
 
-	private Caixa[] arrayCaixas;
+    private Caixa[] arrayCaixas;
+    private Button[] arrayBotoes;
 
-	// Use this for initialization
-	void Start () {
+    // Use this for initialization
+    void Start()
+    {
         jumping = false;
         jumpForce = 20;
-        
+        dead = false;
+
         speed = 3;
         speedRunning = 6;
 
@@ -34,43 +41,80 @@ public class player : MonoBehaviour {
         lastCheckPointIndex = -1;
         setCheckpoint(this.gameObject.transform.position, 0);
 
-		arrayCaixas = FindObjectsOfType(typeof(Caixa)) as Caixa[];
+        arrayCaixas = FindObjectsOfType(typeof(Caixa)) as Caixa[];
+        arrayBotoes = FindObjectsOfType(typeof(Button)) as Button[];
 
         facingRight = true;
     }
-	
-	// Update is called once per frame
-	void Update () {
+
+    // Update is called once per frame
+    void Update()
+    {
 
         //if (Input.GetJoystickNames().Length == 0)
+        if (!dead)
+        {
             keyBoardCalls();
-        //else
             joystickCalls();
+
+        }
+        else
+        {
+            if (deathTime > 1)
+            {
+                foreach (Caixa caixa in arrayCaixas)
+                {
+                    caixa.resetPosition();
+                }
+                foreach (Button button in arrayBotoes)
+                {
+                    button.resetButton();
+                }
+                dead = false;
+                this.gameObject.transform.position = lastCheckPoint;
+            }
+            else
+            {
+                deathTime += Time.deltaTime;
+            }
+
+        }
+        //else
 
     }
 
-    public float getMovimentoX(){
+    public float getMovimentoX()
+    {
         return movimentoX;
     }
 
-    public bool isRunning(){
+    public bool isRunning()
+    {
         return correndo;
     }
 
-    public bool isGrounded(){
+    public bool isDead()
+    {
+        return dead;
+    }
+
+    public bool isGrounded()
+    {
         return grounded;
     }
 
-    public bool isJumping(){
+    public bool isJumping()
+    {
         return jumping;
     }
 
     void keyBoardCalls()
     {
-       movimentoX = Input.GetAxisRaw("Horizontal");
+        movimentoX = Input.GetAxisRaw("Horizontal");
 
         //se ele tiver controlando pelo W, A, S, D
-        if(movimentoX == 0){
+        if (movimentoX == 0)
+        {
             if (Input.GetKey(KeyCode.A))
                 movimentoX = -1;
             else if (Input.GetKey(KeyCode.D))
@@ -89,7 +133,8 @@ public class player : MonoBehaviour {
         }
         //}
 
-        if ((movimentoX > 0 && !facingRight) || (movimentoX < 0 && facingRight)){
+        if ((movimentoX > 0 && !facingRight) || (movimentoX < 0 && facingRight))
+        {
             Flip();
         }
 
@@ -98,6 +143,9 @@ public class player : MonoBehaviour {
 
         if ((collideWithWallOnRightSide && !facingRight) || (!collideWithWallOnRightSide && facingRight))
             parede = false;
+
+        if (Input.GetKey(KeyCode.Escape))
+            SceneManager.LoadScene("TelaInicial");
 
         //DEBUG KEYS
         //foreach (KeyCode vKey in System.Enum.GetValues(typeof(KeyCode)))
@@ -110,17 +158,19 @@ public class player : MonoBehaviour {
         //}
     }
 
-    void joystickCalls(){
+    void joystickCalls()
+    {
         movimentoX = Input.GetAxisRaw("Horizontal");
 
         //if (!parede){
-            if (Input.GetKey(KeyCode.Joystick1Button0) || Input.GetKey(KeyCode.Joystick1Button3))
-                transform.Translate(new Vector3(movimentoX * speedRunning * Time.deltaTime, 0, 0));
-            else
-                transform.Translate(new Vector3(movimentoX * speed * Time.deltaTime, 0, 0));
+        if (Input.GetKey(KeyCode.Joystick1Button0) || Input.GetKey(KeyCode.Joystick1Button3))
+            transform.Translate(new Vector3(movimentoX * speedRunning * Time.deltaTime, 0, 0));
+        else
+            transform.Translate(new Vector3(movimentoX * speed * Time.deltaTime, 0, 0));
         //}
 
-        if ((movimentoX > 0 && !facingRight) || (movimentoX < 0 && facingRight)){
+        if ((movimentoX > 0 && !facingRight) || (movimentoX < 0 && facingRight))
+        {
             Flip();
         }
 
@@ -131,33 +181,40 @@ public class player : MonoBehaviour {
             parede = false;
     }
 
-    void Flip(){
+    void Flip()
+    {
         //gameObject.transform.Rotate(new Vector3(0, 180, 0));
 
         facingRight = !facingRight;
         Vector3 theScale = transform.localScale;
         theScale.x *= -1;
         transform.localScale = theScale;
-	}
+    }
 
-    void jump() {
+    void jump()
+    {
         this.GetComponent<Rigidbody2D>().velocity = new Vector2(0, jumpForce);
         jumping = true;
     }
 
-    void OnTriggerEnter2D(Collider2D col){
-        if (col.gameObject.tag == "Ground"){
+    void OnTriggerEnter2D(Collider2D col)
+    {
+        if (col.gameObject.tag == "Ground")
+        {
             jumping = false;
         }
 
-        if(!col.isTrigger && col.gameObject.tag == "Parede"){
+        if (!col.isTrigger && col.gameObject.tag == "Parede")
+        {
             parede = true;
             collideWithWallOnRightSide = facingRight;
         }
     }
 
-    void OnTriggerStay2D(Collider2D col){
-        if(col.gameObject.tag == "Ground"){
+    void OnTriggerStay2D(Collider2D col)
+    {
+        if (col.gameObject.tag == "Ground")
+        {
             grounded = true;
         }
     }
@@ -177,31 +234,41 @@ public class player : MonoBehaviour {
         }
     }
 
-	void OnCollisionEnter2D(Collision2D col){
-		if (col.gameObject.tag == "Ground") {
-			grounded = true;
-		}
-	}
+    void OnCollisionEnter2D(Collision2D col)
+    {
+        if (col.gameObject.tag == "Ground")
+        {
+            grounded = true;
+        }
+    }
 
-	void OnCollisionExit2D(Collision2D col){
-		if (col.gameObject.tag == "Ground") {
-			grounded = false;
-		}
-	}
+    void OnCollisionExit2D(Collision2D col)
+    {
+        if (col.gameObject.tag == "Ground")
+        {
+            grounded = false;
+        }
+    }
 
-    public void setCheckpoint(Vector3 checkPoint, int checkPointIndex){
-        if(lastCheckPointIndex < checkPointIndex){
+    public void setCheckpoint(Vector3 checkPoint, int checkPointIndex)
+    {
+        if (lastCheckPointIndex < checkPointIndex)
+        {
             lastCheckPoint = checkPoint;
             lastCheckPointIndex = checkPointIndex;
         }
     }
 
-    public void die() {
-        this.gameObject.transform.position = lastCheckPoint;
+    public void die()
+    {
 
-		foreach(Caixa caixa in arrayCaixas)
-		{
-			caixa.resetPosition();
-		}
+        if (!dead)
+        {
+            dead = true;
+            deathTime = 0;
+        }
+
+
+
     }
 }
